@@ -1,20 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { uploadImage } from "@/lib/cloudinary";
+import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-const CATEGORIES = [
-  "Alimentacion",
-  "Transporte",
-  "Entretenimiento",
-  "Salud",
-  "Educacion",
-  "Servicios",
-  "Compras",
-  "Otros",
-];
 
 export async function POST(req: Request) {
   const session = await getSession();
@@ -47,6 +37,10 @@ export async function POST(req: Request) {
       }
     }
 
+    // Get categories from database
+    const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
+    const categoryNames = categories.map((c) => c.name);
+
     // OCR with OpenAI Vision
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -58,7 +52,7 @@ export async function POST(req: Request) {
   "ocrText": "texto completo extraido del recibo",
   "amount": numero total (el monto mas alto o el total final),
   "description": "descripcion corta del gasto (nombre del negocio o concepto principal)",
-  "category": "una de estas categorias: ${CATEGORIES.join(", ")}",
+  "category": "una de estas categorias: ${categoryNames.join(", ")}",
   "date": "fecha del recibo en formato YYYY-MM-DD si es visible, o null"
 }
 Si no puedes extraer algun campo, usa null para ese campo. Para category, elige la mas apropiada basandote en el tipo de negocio o productos del recibo.`,
@@ -89,7 +83,7 @@ Si no puedes extraer algun campo, usa null para ese campo. Para category, elige 
         ocrText: content,
         amount: null,
         description: null,
-        category: "Otros",
+        category: categoryNames[0] || "Otros",
         date: null,
         imageUrl,
       });
@@ -99,7 +93,7 @@ Si no puedes extraer algun campo, usa null para ese campo. Para category, elige 
       ocrText: parsed.ocrText || content,
       amount: parsed.amount || null,
       description: parsed.description || null,
-      category: CATEGORIES.includes(parsed.category) ? parsed.category : "Otros",
+      category: categoryNames.includes(parsed.category) ? parsed.category : categoryNames[0] || "Otros",
       date: parsed.date || null,
       imageUrl,
     });

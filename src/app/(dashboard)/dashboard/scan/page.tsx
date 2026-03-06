@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Category {
   id: string;
@@ -16,16 +16,16 @@ export default function ScanPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch("/api/categories").then((r) => r.json()).then(setCategories);
   }, []);
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = useCallback(async (file: File) => {
     setPreview(URL.createObjectURL(file));
     setProcessing(true);
     setOcrText("");
@@ -61,22 +61,57 @@ export default function ScanPage() {
     } finally {
       setProcessing(false);
     }
+  }, [categories]);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
   }
 
-  async function handleSave(e: React.FormEvent) {
+  function handleDrop(e: React.DragEvent) {
     e.preventDefault();
-    const res = await fetch("/api/expenses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, ocrText, receipt: imageUrl }),
-    });
-    if (res.ok) {
-      setSaved(true);
-      setForm({ amount: "", description: "", categoryId: "", date: "" });
-      setOcrText("");
-      setPreview(null);
-      setImageUrl(null);
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      processFile(file);
     }
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+  }
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (saving) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+
+    setSaving(true);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/expenses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...form, ocrText, receipt: imageUrl }),
+        });
+        if (res.ok) {
+          setSaved(true);
+          setForm({ amount: "", description: "", categoryId: "", date: "" });
+          setOcrText("");
+          setPreview(null);
+          setImageUrl(null);
+        }
+      } finally {
+        setSaving(false);
+      }
+    }, 500);
   }
 
   return (
@@ -86,14 +121,23 @@ export default function ScanPage() {
       <div className="bg-white p-6 rounded-xl shadow-sm border">
         <div
           onClick={() => fileRef.current?.click()}
-          className="border-2 border-dashed rounded-xl p-10 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition"
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition ${
+            dragging
+              ? "border-indigo-500 bg-indigo-50"
+              : "hover:border-indigo-400 hover:bg-indigo-50/50"
+          }`}
         >
           {preview ? (
             <img src={preview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
           ) : (
             <div>
               <div className="text-4xl text-gray-300 mb-2">&#128247;</div>
-              <p className="text-gray-500">Click para subir imagen de recibo</p>
+              <p className="text-gray-500">
+                {dragging ? "Suelta la imagen aqui" : "Click o arrastra una imagen de recibo"}
+              </p>
               <p className="text-xs text-gray-400 mt-1">JPG, PNG - Tickets, facturas, recibos</p>
               <p className="text-xs text-indigo-500 mt-2">Procesado con GPT-4o Vision</p>
             </div>
@@ -174,8 +218,8 @@ export default function ScanPage() {
                     className="w-full mt-1 px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
-                <button type="submit" className="w-full py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition">
-                  Guardar Gasto
+                <button type="submit" disabled={saving} className="w-full py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition">
+                  {saving ? "Guardando..." : "Guardar Gasto"}
                 </button>
               </form>
             )}
