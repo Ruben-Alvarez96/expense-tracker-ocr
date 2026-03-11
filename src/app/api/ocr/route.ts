@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
     // Get categories from database
     const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
-    const categoryNames = categories.map((c) => c.name);
+    const categoryNames = categories.map((c: any) => c.name);
 
     // OCR with OpenAI Vision
     const response = await openai.chat.completions.create({
