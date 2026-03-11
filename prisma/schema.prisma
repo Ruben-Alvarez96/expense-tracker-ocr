@@ -13,8 +13,8 @@ model User {
   password  String
   name      String
   createdAt DateTime  @default(now())
-  expenses  Expense[]
   budgets   Budget[]
+  expenses  Expense[]
 }
 
 model Category {
@@ -22,8 +22,8 @@ model Category {
   name     String    @unique
   icon     String    @default("tag")
   color    String    @default("#6366f1")
-  expenses Expense[]
   budgets  Budget[]
+  expenses Expense[]
 }
 
 model Expense {
@@ -35,9 +35,9 @@ model Expense {
   ocrText     String?
   userId      String
   categoryId  String
-  user        User     @relation(fields: [userId], references: [id])
-  category    Category @relation(fields: [categoryId], references: [id])
   createdAt   DateTime @default(now())
+  category    Category @relation(fields: [categoryId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Budget {
@@ -47,9 +47,9 @@ model Budget {
   year       Int
   userId     String
   categoryId String
-  user       User     @relation(fields: [userId], references: [id])
-  category   Category @relation(fields: [categoryId], references: [id])
   createdAt  DateTime @default(now())
+  category   Category @relation(fields: [categoryId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, categoryId, month, year])
 }
