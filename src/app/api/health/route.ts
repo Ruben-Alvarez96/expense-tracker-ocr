@@ -30,8 +30,8 @@ export async function GET() {
     });
   } catch (error) {
     console.error("❌ Health check failed:", error);
-    console.error("Error type:", error.constructor.name);
-    console.error("Error message:", error.message);
+    console.error("Error type:", error instanceof Error ? error.constructor.name : "Unknown");
+    console.error("Error message:", error instanceof Error ? error.message : "Unknown error");
     console.error("Error code:", (error as any).code);
     console.error("Error meta:", (error as any).meta);
     
@@ -39,7 +39,7 @@ export async function GET() {
       status: "unhealthy", 
       database: "disconnected",
       error: error instanceof Error ? error.message : "Unknown error",
-      errorType: error.constructor.name,
+      errorType: error instanceof Error ? error.constructor.name : "Unknown",
       errorCode: (error as any).code,
       timestamp: new Date().toISOString()
     }, { status: 500 });
