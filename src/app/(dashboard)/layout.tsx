@@ -11,6 +11,7 @@ const navItems = [
   { href: "/dashboard/scan", label: "Escanear" },
   { href: "/dashboard/budgets", label: "Presupuestos" },
   { href: "/dashboard/categories", label: "Categorias" },
+  { href: "/dashboard/extractos", label: "Extractos" },
   { href: "/dashboard/export", label: "Exportar" },
 ];
 
