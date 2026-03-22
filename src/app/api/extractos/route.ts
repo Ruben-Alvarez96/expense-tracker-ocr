@@ -46,7 +46,7 @@ Tu tarea es extraer TODOS los gastos, consumos y pagos realizados (ignorando dep
 Devuelve SOLO un array JSON valido de objetos (sin bloques de codigo extra o markdown) con la siguiente estructura para cada gasto encontrado en el extracto:
 [
   {
-    "amount": numero decimal con el monto del gasto (siempre positivo),
+    "amount": numero con el monto del gasto (siempre positivo). ATENCION: El punto (.) es un separador de miles en esta moneda (ej: 10.000 significa 10000). Omite los puntos al devolver el numero,
     "description": "nombre del comercio o concepto descriptivo del gasto corto",
     "category": "clasifica en una de estas categorias: ${categoryNames.join(", ")}. Si ninguna encaja perfecto, elige la mas parecida.",
     "date": "fecha del gasto en formato YYYY-MM-DD. Si solo ves dia y mes, asume el año correspondiente segun el texto."
