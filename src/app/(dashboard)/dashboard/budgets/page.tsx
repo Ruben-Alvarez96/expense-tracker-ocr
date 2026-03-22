@@ -106,7 +106,7 @@ export default function BudgetsPage() {
                     <span className="font-medium">{b.category.name}</span>
                   </div>
                   <span className={`text-sm font-semibold ${over ? "text-red-600 dark:text-red-400" : "text-gray-600 dark:text-gray-300"}`}>
-                    ${spent.toFixed(2)} / ${b.amount.toFixed(2)}
+                    ${spent.toLocaleString('es-PY')} / ${b.amount.toLocaleString('es-PY')}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">

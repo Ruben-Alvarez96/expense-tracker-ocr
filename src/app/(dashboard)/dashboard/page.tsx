@@ -92,7 +92,7 @@ export default function DashboardPage() {
                   : "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800"
               }`}
             >
-              {a.percentage >= 100 ? "Excedido" : "Alerta"}: {a.category} - Gastado ${a.spent.toFixed(2)} de ${a.budget.toFixed(2)} ({a.percentage}%)
+              {a.percentage >= 100 ? "Excedido" : "Alerta"}: {a.category} - Gastado ${a.spent.toLocaleString('es-PY')} de ${a.budget.toLocaleString('es-PY')} ({a.percentage}%)
             </div>
           ))}
         </div>
@@ -102,7 +102,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border dark:border-gray-700">
           <p className="text-sm text-gray-500 dark:text-gray-400">Total del Mes</p>
-          <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">${stats.total.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">${stats.total.toLocaleString('es-PY')}</p>
           {monthDiff !== null && (
             <p className={`text-xs mt-1 font-medium ${monthDiff > 0 ? "text-red-500 dark:text-red-400" : "text-green-500 dark:text-green-400"}`}>
               {monthDiff > 0 ? "+" : ""}{monthDiff}% vs mes anterior
@@ -116,14 +116,14 @@ export default function DashboardPage() {
         </div>
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border dark:border-gray-700">
           <p className="text-sm text-gray-500 dark:text-gray-400">Promedio por Gasto</p>
-          <p className="text-3xl font-bold">${stats.count ? (stats.total / stats.count).toFixed(2) : "0.00"}</p>
+          <p className="text-3xl font-bold">${stats.count ? (stats.total / stats.count).toLocaleString('es-PY') : "0"}</p>
           <p className="text-xs text-gray-400 mt-1">por transaccion</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border dark:border-gray-700">
           <p className="text-sm text-gray-500 dark:text-gray-400">Mayor Gasto</p>
           {stats.topExpense ? (
             <>
-              <p className="text-3xl font-bold text-orange-500 dark:text-orange-400">${stats.topExpense.amount.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-orange-500 dark:text-orange-400">${stats.topExpense.amount.toLocaleString('es-PY')}</p>
               <p className="text-xs text-gray-400 mt-1 truncate">{stats.topExpense.description}</p>
             </>
           ) : (
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v) => v.slice(8)} stroke="currentColor" opacity={0.5} />
                 <YAxis tick={{ fontSize: 11 }} stroke="currentColor" opacity={0.5} />
                 <Tooltip
-                  formatter={(v, name) => [`$${Number(v).toFixed(2)}`, name === "cumulative" ? "Acumulado" : "Dia"]}
+                  formatter={(v, name) => [`$${Number(v).toLocaleString('es-PY')}`, name === "cumulative" ? "Acumulado" : "Dia"]}
                   labelFormatter={(l) => `Dia ${String(l).slice(8)}`}
                   contentStyle={{ backgroundColor: "var(--tooltip-bg, #fff)", border: "1px solid var(--tooltip-border, #e5e7eb)", borderRadius: "8px" }}
                 />
@@ -170,7 +170,7 @@ export default function DashboardPage() {
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v) => v.slice(8)} stroke="currentColor" opacity={0.5} />
                 <YAxis tick={{ fontSize: 11 }} stroke="currentColor" opacity={0.5} />
                 <Tooltip
-                  formatter={(v) => [`$${Number(v).toFixed(2)}`, "Monto"]}
+                  formatter={(v) => [`$${Number(v).toLocaleString('es-PY')}`, "Monto"]}
                   labelFormatter={(l) => `Dia ${String(l).slice(8)}`}
                   contentStyle={{ backgroundColor: "var(--tooltip-bg, #fff)", border: "1px solid var(--tooltip-border, #e5e7eb)", borderRadius: "8px" }}
                 />
@@ -205,7 +205,7 @@ export default function DashboardPage() {
                       <Cell key={c.name} fill={c.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v) => [`$${Number(v).toFixed(2)}`]} />
+                  <Tooltip formatter={(v) => [`$${Number(v).toLocaleString('es-PY')}`]} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-2 text-sm flex-1">
@@ -215,7 +215,7 @@ export default function DashboardPage() {
                     <div key={c.name} className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
                       <span className="flex-1">{c.name}</span>
-                      <span className="text-gray-500 dark:text-gray-400 tabular-nums">${c.total.toFixed(2)}</span>
+                      <span className="text-gray-500 dark:text-gray-400 tabular-nums">${c.total.toLocaleString('es-PY')}</span>
                       <span className="text-gray-400 dark:text-gray-500 text-xs w-8 text-right">{pct}%</span>
                     </div>
                   );
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                 <XAxis type="number" tick={{ fontSize: 11 }} stroke="currentColor" opacity={0.5} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={100} stroke="currentColor" opacity={0.5} />
                 <Tooltip
-                  formatter={(v) => [`$${Number(v).toFixed(2)}`, "Total"]}
+                  formatter={(v) => [`$${Number(v).toLocaleString('es-PY')}`, "Total"]}
                   contentStyle={{ backgroundColor: "var(--tooltip-bg, #fff)", border: "1px solid var(--tooltip-border, #e5e7eb)", borderRadius: "8px" }}
                 />
                 <Bar dataKey="total" radius={[0, 4, 4, 0]}>
@@ -262,7 +262,7 @@ export default function DashboardPage() {
               <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke="currentColor" opacity={0.5} />
               <YAxis tick={{ fontSize: 11 }} stroke="currentColor" opacity={0.5} />
               <Tooltip
-                formatter={(v) => [`$${Number(v).toFixed(2)}`, "Total"]}
+                formatter={(v) => [`$${Number(v).toLocaleString('es-PY')}`, "Total"]}
                 contentStyle={{ backgroundColor: "var(--tooltip-bg, #fff)", border: "1px solid var(--tooltip-border, #e5e7eb)", borderRadius: "8px" }}
               />
               <Legend />
@@ -314,7 +314,7 @@ export default function DashboardPage() {
                         </p>
                       </div>
                     </div>
-                    <span className="font-semibold">${exp.amount.toFixed(2)}</span>
+                    <span className="font-semibold">${exp.amount.toLocaleString('es-PY')}</span>
                   </div>
                 ))}
               </div>
