@@ -74,6 +74,18 @@ Devuelve SOLO un array JSON valido de objetos (sin bloques de codigo extra o mar
     try {
         const jsonStr = content.replace(/```json?\n?/ig, "").replace(/```/g, "").trim();
         expenses = JSON.parse(jsonStr);
+        
+        // Hard filter to ensure no credit card payments or refunds slip through
+        expenses = expenses.filter((exp: any) => {
+          const desc = exp.description ? exp.description.toLowerCase() : "";
+          if (desc.includes('pago de tarjeta') || desc.includes('pago tarjeta') || desc.includes('tarjeta de credito') || desc.includes('tarjeta de crédito')) {
+            return false;
+          }
+          if (desc.includes('reintegro') || desc.includes('devolucion') || desc.includes('devolución')) {
+            return false;
+          }
+          return true;
+        });
     } catch (err) {
       console.error("Error parsing JSON:", err, "Content:", content);
       return NextResponse.json({ error: "Error al entender la respuesta de la IA." }, { status: 500 });
