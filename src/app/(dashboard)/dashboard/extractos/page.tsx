@@ -104,7 +104,7 @@ export default function ExtractosPage() {
         <div className="flex items-center gap-4 flex-wrap">
           <input
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,.csv,text/csv"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
             className="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 dark:file:bg-indigo-900/50 dark:file:text-indigo-400"
           />

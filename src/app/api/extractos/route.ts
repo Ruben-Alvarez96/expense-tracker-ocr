@@ -30,18 +30,24 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(bytes);
 
     let text = "";
+    const isCsv = file.name.toLowerCase().endsWith(".csv") || file.type === "text/csv";
+
     try {
-      const data = await pdfParse(buffer);
-      text = data.text;
+      if (isCsv) {
+        text = buffer.toString("utf-8");
+      } else {
+        const data = await pdfParse(buffer);
+        text = data.text;
+      }
     } catch (parseError) {
-      console.error("Error parsing PDF:", parseError);
-      return NextResponse.json({ error: "No se pudo leer el PDF." }, { status: 400 });
+      console.error("Error parsing document:", parseError);
+      return NextResponse.json({ error: "No se pudo leer el documento." }, { status: 400 });
     }
 
     const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
     const categoryNames = categories.map((c: any) => c.name);
 
-    const systemPrompt = `Eres un asistente experto en analizar extractos bancarios y de tarjetas de credito.
+    const systemPrompt = `Eres un asistente experto en analizar extractos bancarios y de tarjetas de credito, que pueden venir en formato de texto parseado de un PDF o en formato CSV.
 Tu tarea es extraer los gastos y consumos realizados.
 
 REGLAS ESTRICTAS DE EXCLUSION (NO INCLUIR):
