@@ -25,6 +25,7 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(false);
   const [categorizing, setCategorizing] = useState(false);
   const [filterCat, setFilterCat] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadExpenses();
@@ -38,7 +39,10 @@ export default function ExpensesPage() {
   function loadExpenses() {
     const params = new URLSearchParams();
     if (filterCat) params.set("categoryId", filterCat);
-    fetch(`/api/expenses?${params}`).then((r) => r.json()).then(setExpenses);
+    fetch(`/api/expenses?${params}`).then((r) => r.json()).then(data => {
+      setExpenses(data);
+      setSelectedIds(new Set());
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -70,6 +74,38 @@ export default function ExpensesPage() {
     if (!confirm("Eliminar este gasto?")) return;
     await fetch(`/api/expenses/${id}`, { method: "DELETE" });
     loadExpenses();
+  }
+
+  function toggleAll() {
+    if (selectedIds.size === expenses.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(expenses.map(e => e.id)));
+    }
+  }
+
+  function toggleOne(id: string) {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedIds(newSet);
+  }
+
+  async function handleBulkDelete() {
+    if (!confirm(`¿Estás seguro de eliminar ${selectedIds.size} gastos seleccionados?`)) return;
+    setLoading(true);
+    try {
+      await fetch('/api/expenses/bulk-delete', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) })
+      });
+      loadExpenses();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleEdit(exp: Expense) {
@@ -167,25 +203,55 @@ export default function ExpensesPage() {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border dark:border-gray-700">
         <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between">
-          <h2 className="font-semibold">Lista de Gastos</h2>
-          <select
-            value={filterCat}
-            onChange={(e) => setFilterCat(e.target.value)}
-            className="text-sm px-3 py-1.5 border dark:border-gray-600 rounded-lg outline-none bg-white dark:bg-gray-700 dark:text-gray-100"
-          >
-            <option value="">Todas las categorias</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            <h2 className="font-semibold">Lista de Gastos</h2>
+            {selectedIds.size > 0 && (
+              <button 
+                onClick={handleBulkDelete} 
+                disabled={loading} 
+                className="text-sm bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 px-3 py-1.5 rounded-md transition font-medium"
+              >
+                {loading ? "Eliminando..." : `Eliminar ${selectedIds.size} seleccionados`}
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-4">
+            {expenses.length > 0 && (
+              <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-indigo-600 transition">
+                <input 
+                  type="checkbox" 
+                  checked={selectedIds.size === expenses.length && expenses.length > 0} 
+                  onChange={toggleAll} 
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" 
+                />
+                <span className="font-medium">Seleccionar Todos</span>
+              </label>
+            )}
+            <select
+              value={filterCat}
+              onChange={(e) => setFilterCat(e.target.value)}
+              className="text-sm px-3 py-1.5 border dark:border-gray-600 rounded-lg outline-none bg-white dark:bg-gray-700 dark:text-gray-100"
+            >
+              <option value="">Todas las categorias</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
         {expenses.length === 0 ? (
           <p className="p-6 text-gray-400 text-sm">No hay gastos registrados</p>
         ) : (
           <div className="divide-y dark:divide-gray-700">
             {expenses.map((exp) => (
-              <div key={exp.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <div className="flex items-center gap-3">
+              <div key={exp.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <div className="flex items-center gap-4">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedIds.has(exp.id)} 
+                    onChange={() => toggleOne(exp.id)} 
+                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" 
+                  />
                   {exp.receipt ? (
                     <a href={exp.receipt} target="_blank" rel="noopener noreferrer">
                       <img src={exp.receipt} alt="Recibo" className="w-10 h-10 rounded object-cover border dark:border-gray-600 hover:opacity-80" />

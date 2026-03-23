@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     const categoryNames = categories.map((c: any) => c.name);
 
     const systemPrompt = `Eres un asistente experto en analizar extractos bancarios y de tarjetas de credito.
-Tu tarea es extraer TODOS los gastos, consumos y pagos realizados (ignorando depositos, ingresos de saldo, cobro de salarios o movimientos similares de ingreso, Y TAMBIEN IGNORANDO expresamente los pagos de tarjeta de credito o pagos de resumenes de tarjeta emitidos desde la propia cuenta, ya que el usuario carga el extracto de tarjeta por separado para evitar duplicados).
+Tu tarea es extraer TODOS los gastos, consumos y pagos realizados (ignorando depositos, ingresos de saldo, cobro de salarios, reintegros, devoluciones corporativas o personales, pagos recibidos o movimientos similares de ingreso, Y TAMBIEN IGNORANDO expresamente los pagos de tarjeta de credito o pagos de resumenes de tarjeta emitidos desde la propia cuenta, ya que el usuario carga el extracto de tarjeta por separado para evitar duplicados).
 Devuelve SOLO un array JSON valido de objetos (sin bloques de codigo extra o markdown) con la siguiente estructura para cada gasto encontrado en el extracto:
 [
   {
@@ -71,6 +71,26 @@ Devuelve SOLO un array JSON valido de objetos (sin bloques de codigo extra o mar
     } catch (err) {
       console.error("Error parsing JSON:", err, "Content:", content);
       return NextResponse.json({ error: "Error al entender la respuesta de la IA." }, { status: 500 });
+    }
+
+    try {
+      if (expenses.length > 0) {
+        const recentExpenses = await prisma.expense.findMany({
+          where: { userId: session.id },
+          select: { amount: true, date: true }
+        });
+        
+        expenses = expenses.map((exp: any) => {
+          const expDate = new Date(exp.date).toISOString().split('T')[0];
+          const isDuplicate = recentExpenses.some(re => 
+            re.amount === Number(exp.amount) &&
+            re.date.toISOString().split('T')[0] === expDate
+          );
+          return { ...exp, isDuplicate };
+        });
+      }
+    } catch (err) {
+      console.error("Error checking duplicates:", err);
     }
 
     return NextResponse.json({ expenses });

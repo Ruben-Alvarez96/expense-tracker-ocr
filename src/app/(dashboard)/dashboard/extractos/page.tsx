@@ -18,6 +18,7 @@ export default function ExtractosPage() {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [omittedCount, setOmittedCount] = useState(0);
 
   useEffect(() => {
     fetch("/api/categories")
@@ -30,6 +31,7 @@ export default function ExtractosPage() {
     if (!file) return;
     setLoading(true);
     setError(null);
+    setOmittedCount(0);
     const formData = new FormData();
     formData.append("file", file);
 
@@ -40,7 +42,9 @@ export default function ExtractosPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setExpenses(data.expenses);
+        const validExpenses = data.expenses.filter((e: any) => !e.isDuplicate);
+        setOmittedCount(data.expenses.length - validExpenses.length);
+        setExpenses(validExpenses);
       } else {
         setError(data.error || "Error al procesar el PDF");
       }
@@ -113,6 +117,11 @@ export default function ExtractosPage() {
           </button>
         </div>
         
+        {omittedCount > 0 && (
+          <p className="mt-4 text-yellow-700 text-sm font-medium bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+            Se omitieron {omittedCount} gasto(s) porque ya se encontraban registrados en la base de datos con la misma fecha y monto.
+          </p>
+        )}
         {error && <p className="mt-4 text-red-500 text-sm font-medium bg-red-50 dark:bg-red-900/30 p-3 rounded-lg border border-red-200 dark:border-red-800">{error}</p>}
       </div>
 
