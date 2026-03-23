@@ -42,8 +42,14 @@ export async function POST(req: Request) {
     const categoryNames = categories.map((c: any) => c.name);
 
     const systemPrompt = `Eres un asistente experto en analizar extractos bancarios y de tarjetas de credito.
-Tu tarea es extraer TODOS los gastos, consumos y pagos realizados (ignorando depositos, ingresos de saldo, cobro de salarios, reintegros, devoluciones corporativas o personales, pagos recibidos o movimientos similares de ingreso, Y TAMBIEN IGNORANDO expresamente los pagos de tarjeta de credito o pagos de resumenes de tarjeta emitidos desde la propia cuenta, ya que el usuario carga el extracto de tarjeta por separado para evitar duplicados).
-Devuelve SOLO un array JSON valido de objetos (sin bloques de codigo extra o markdown) con la siguiente estructura para cada gasto encontrado en el extracto:
+Tu tarea es extraer los gastos y consumos realizados.
+
+REGLAS ESTRICTAS DE EXCLUSION (NO INCLUIR):
+- BAJO NINGUNA CIRCUNSTANCIA incluyas movimientos que sean reintegros (ej: "Reintegro Pago Farmacias", "Reintegro Pago Gastronomía"). Si el concepto contiene la palabra "Reintegro" o "Devolucion", DEBE SER IGNORADO totalmente.
+- IGNORA expresamente los pagos constituidos al resumen de tu tarjeta de credito realizados desde tu propia cuenta, ya que el usuario carga el extracto de tarjeta por separado para evitar duplicados.
+- NO incluyas depositos, cobro de salarios, transferencias recibidas ni ingresos de saldo.
+
+Devuelve SOLO un array JSON valido de objetos (sin bloques de codigo extra o markdown) con la siguiente estructura para cada gasto valido encontrado:
 [
   {
     "amount": numero con el monto del gasto (siempre positivo). ATENCION: El punto (.) es un separador de miles en esta moneda (ej: 10.000 significa 10000). Omite los puntos al devolver el numero,
